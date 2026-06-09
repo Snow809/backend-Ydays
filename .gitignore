@@ -1,0 +1,11 @@
+**/node_modules/
+**/dist/
+**/.env
+**/*.tsbuildinfo
+**/npm-debug.log*
+
+hr-ai-backend/uploads/*
+!hr-ai-backend/uploads/.gitkeep
+
+.DS_Store
+Thumbs.db
