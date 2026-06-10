@@ -19,7 +19,7 @@ export class UsersService {
       data: {
         email: dto.email,
         passwordHash,
-        role: dto.role ?? 'COLLABORATOR',
+        role: 'COLLABORATOR',
       },
       select: this.safeUserSelect(),
     });

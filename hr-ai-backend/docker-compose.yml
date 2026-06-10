@@ -4,7 +4,7 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - .env.example
+      - .env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/hr_ai?schema=public
       REDIS_HOST: redis

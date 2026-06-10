@@ -17,6 +17,14 @@ export class AppConfigService {
     return this.configService.get<string>('JWT_EXPIRES_IN') ?? '1d';
   }
 
+  get jwtRefreshSecret(): string {
+    return this.configService.get<string>('JWT_REFRESH_SECRET') ?? this.jwtSecret;
+  }
+
+  get jwtRefreshExpiresIn(): string {
+    return this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') ?? '7d';
+  }
+
   get uploadDir(): string {
     return this.configService.get<string>('UPLOAD_DIR') ?? './uploads';
   }
