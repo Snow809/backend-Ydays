@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node dist/main",
     "start:dev": "nest start --watch",
+    "start:docker": "prisma migrate deploy && prisma db seed && node dist/main",
     "build": "nest build",
     "lint": "eslint \"src/**/*.ts\" \"prisma/**/*.ts\" --max-warnings=0",
     "prisma:generate": "prisma generate",

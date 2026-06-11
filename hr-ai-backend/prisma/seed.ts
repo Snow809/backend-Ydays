@@ -8,7 +8,14 @@ async function main() {
   const userPassword = await bcrypt.hash('password123', 10);
 
   const users = [
-    { email: 'admin@demo.local', role: UserRole.ADMIN, hash: adminPassword },
+    // Super Admin — session volatile (mémoire seulement)
+    { email: 'admin@demo.local',      role: UserRole.ADMIN,        hash: adminPassword },
+    // Équipe RH
+    { email: 'hr@demo.local',         role: UserRole.HR,           hash: userPassword },
+    // Manager
+    { email: 'manager@demo.local',    role: UserRole.MANAGER,      hash: userPassword },
+    // Collaborateur / Employé
+    { email: 'employe@demo.local',    role: UserRole.COLLABORATOR, hash: userPassword },
   ];
 
   for (const u of users) {

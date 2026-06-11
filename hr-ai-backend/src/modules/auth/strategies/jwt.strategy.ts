@@ -25,13 +25,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(req: any, payload: JwtPayload) {
+    console.log('JwtStrategy.validate payload:', payload);
     const token = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
     
     if (token) {
       const isBlacklisted = await this.redisService.isTokenBlacklisted(token);
       if (isBlacklisted) {
+        console.log('Token is blacklisted');
         throw new UnauthorizedException('Token has been revoked');
       }
+    } else {
+      console.log('No token found in request');
     }
 
     return {
