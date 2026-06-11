@@ -6,6 +6,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { EmployeesModule } from './modules/employees/employees.module';
 import { DocumentsModule } from './modules/documents/documents.module';
+import { DocumentWorkflowsModule } from './modules/document-workflows/document-workflows.module';
 import { RagModule } from './modules/rag/rag.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { GeneratedDocumentsModule } from './modules/generated-documents/generated-documents.module';
@@ -29,6 +30,7 @@ import { RedisModule } from './common/redis/redis.module';
     UsersModule,
     EmployeesModule,
     DocumentsModule,
+    DocumentWorkflowsModule,
     RagModule,
     ChatModule,
     GeneratedDocumentsModule,

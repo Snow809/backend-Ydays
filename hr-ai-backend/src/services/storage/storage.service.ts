@@ -16,6 +16,19 @@ export class StorageService {
     return filePath;
   }
 
+  async saveGeneratedDocument(content: string, baseName: string): Promise<string> {
+    const directory = join(this.config.uploadDir, 'generated-documents');
+    await mkdir(directory, { recursive: true });
+    const safeBaseName = baseName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+    const fileName = `${safeBaseName || 'document'}-${randomUUID()}.txt`;
+    const filePath = join(directory, fileName);
+    await writeFile(filePath, content, 'utf8');
+    return filePath;
+  }
+
   getStorageProvider() {
     return {
       provider: 'local',

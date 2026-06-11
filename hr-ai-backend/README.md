@@ -47,6 +47,12 @@ Default admin:
 - Email: `admin@demo.local`
 - Password: `admin123`
 
+Demo users seeded for document workflows:
+
+- HR: `hr@demo.local` / `password123`
+- Manager: `manager@demo.local` / `password123`
+- Collaborator: `employee@demo.local` / `password123`
+
 ## Run With Docker
 
 ```bash
@@ -92,6 +98,20 @@ All application routes use the `/api` prefix, except `GET /health`.
 - `GET /api/documents/:id`
 - `PATCH /api/documents/:id/validate`
 - `PATCH /api/documents/:id/archive`
+- `POST /api/document-templates`
+- `GET /api/document-templates`
+- `GET /api/document-templates/active`
+- `GET /api/document-templates/:id`
+- `PATCH /api/document-templates/:id`
+- `PATCH /api/document-templates/:id/deactivate`
+- `DELETE /api/document-templates/:id`
+- `POST /api/document-requests`
+- `GET /api/document-requests/me`
+- `GET /api/document-requests/pending-approval`
+- `GET /api/document-requests/history`
+- `PATCH /api/document-requests/:id/approve`
+- `PATCH /api/document-requests/:id/reject`
+- `GET /api/document-requests/:id/download`
 - `POST /api/rag/query`
 - `POST /api/rag/index-document/:documentId`
 - `POST /api/chat/ask`
