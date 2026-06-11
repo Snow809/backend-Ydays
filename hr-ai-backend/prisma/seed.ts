@@ -4,21 +4,29 @@ import { PrismaClient, UserRole } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  const passwordHash = await bcrypt.hash('admin123', 10);
+  const adminPassword = await bcrypt.hash('admin123', 10);
+  const userPassword = await bcrypt.hash('password123', 10);
 
-  await prisma.user.upsert({
-    where: { email: 'admin@demo.local' },
-    update: {
-      passwordHash,
-      role: UserRole.ADMIN,
-      isActive: true,
-    },
-    create: {
-      email: 'admin@demo.local',
-      passwordHash,
-      role: UserRole.ADMIN,
-    },
-  });
+  const users = [
+    { email: 'admin@demo.local', role: UserRole.ADMIN, hash: adminPassword },
+  ];
+
+  for (const u of users) {
+    await prisma.user.upsert({
+      where: { email: u.email },
+      update: {
+        passwordHash: u.hash,
+        role: u.role,
+        isActive: true,
+      },
+      create: {
+        email: u.email,
+        passwordHash: u.hash,
+        role: u.role,
+        isActive: true,
+      },
+    });
+  }
 }
 
 main()

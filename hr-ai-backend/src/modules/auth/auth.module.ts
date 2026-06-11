@@ -5,6 +5,7 @@ import { AppConfigModule } from '../../config/config.module';
 import { AppConfigService } from '../../config/config.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { LoginHistoryService } from './login-history.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
@@ -20,7 +21,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, LoginHistoryService, JwtStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

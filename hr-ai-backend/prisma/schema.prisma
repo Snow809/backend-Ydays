@@ -64,6 +64,7 @@ model User {
   generatedDocuments   GeneratedDocument[]   @relation("RequestedGeneratedDocuments")
   validatedGenerations GeneratedDocument[]   @relation("ValidatedGeneratedDocuments")
   auditLogs            AuditLog[]
+  loginHistories       LoginHistory[]
 }
 
 model Employee {
@@ -191,4 +192,18 @@ model AuditLog {
   metadata    Json?
   createdAt   DateTime @default(now())
   actor       User?    @relation(fields: [actorUserId], references: [id])
+}
+
+model LoginHistory {
+  id           String   @id @default(cuid())
+  userId       String?
+  email        String
+  ipAddress    String?
+  userAgent    String?
+  status       String   @default("SUCCESS") // SUCCESS or FAILED
+  loginAt      DateTime @default(now())
+  user         User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([loginAt])
 }

@@ -19,6 +19,7 @@ import { LlmModule } from './services/llm/llm.module';
 import { EmbeddingsModule } from './services/embeddings/embeddings.module';
 import { DocumentParserModule } from './services/document-parser/document-parser.module';
 import { WorkersModule } from './workers/workers.module';
+import { RedisModule } from './common/redis/redis.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { WorkersModule } from './workers/workers.module';
     EmbeddingsModule,
     DocumentParserModule,
     WorkersModule,
+    RedisModule,
   ],
   controllers: [AppController],
 })
