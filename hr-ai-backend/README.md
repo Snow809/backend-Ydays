@@ -145,26 +145,3 @@ All application routes use the `/api` prefix, except `GET /health`.
 ## Modular Monolith
 
 The application is one NestJS app with feature modules. It is intentionally not split into microservices. Cross-cutting services such as Prisma, storage, LLM, embeddings, document parsing, auditing, and workers are internal modules that can evolve without changing the deployment model.
-
-## MVP vs Future
-
-MVP:
-
-- Authentication and RBAC
-- Minimal employee data
-- HR knowledge documents
-- RAG/chat placeholders with source-aware refusal behavior
-- AI-assisted document draft placeholders with HR validation
-- Onboarding plan placeholders
-- Dashboards and alerts skeletons
-- Audit logging
-
-Future:
-
-- Real LLM/LangChain integration
-- pgvector embeddings and semantic retrieval
-- MinIO/S3 storage adapter
-- Power BI PostgreSQL views
-- Prediction jobs after enough clean historical data exists
-- Advanced social risk analysis
-- HRIS integrations
