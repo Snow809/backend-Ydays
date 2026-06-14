@@ -7,17 +7,34 @@ export class RetrieverService {
   constructor(private readonly prisma: PrismaService) {}
 
   async retrieveRelevantChunks(question: string, user: AuthenticatedUser) {
-    // TODO: Add prompt injection detection before retrieval.
-    // TODO: Add role-aware sensitive chunk filtering before returning context to the LLM.
+    const terms = question
+      .toLowerCase()
+      .split(/\W+/)
+      .map((term) => term.trim())
+      .filter((term) => term.length >= 3)
+      .slice(0, 5);
+
     const chunks = await this.prisma.documentChunk.findMany({
       where: {
         document: {
           status: 'VALIDATED',
+          OR: [
+            { confidentialityLevel: null },
+            { confidentialityLevel: 'PUBLIC' },
+            { confidentialityLevel: user.role },
+            ...(user.role === 'ADMIN' || user.role === 'HR'
+              ? [{ confidentialityLevel: 'HR' }, { confidentialityLevel: 'CONFIDENTIAL' }]
+              : []),
+          ],
         },
-        content: {
-          contains: question.split(' ')[0] ?? '',
-          mode: 'insensitive',
-        },
+        OR: terms.length
+          ? terms.map((term) => ({
+              content: {
+                contains: term,
+                mode: 'insensitive' as const,
+              },
+            }))
+          : undefined,
       },
       take: 3,
       include: {

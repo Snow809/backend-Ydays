@@ -56,6 +56,26 @@ export class UsersService {
     });
   }
 
+  async getConsent(userId: string) {
+    let consent = await this.prisma.userConsent.findUnique({
+      where: { userId },
+    });
+    if (!consent) {
+      consent = await this.prisma.userConsent.create({
+        data: { userId, analyticsConsent: false },
+      });
+    }
+    return consent;
+  }
+
+  async updateConsent(userId: string, analyticsConsent: boolean) {
+    return this.prisma.userConsent.upsert({
+      where: { userId },
+      update: { analyticsConsent },
+      create: { userId, analyticsConsent },
+    });
+  }
+
   private safeUserSelect() {
     return {
       id: true,

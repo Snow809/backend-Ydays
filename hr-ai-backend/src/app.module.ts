@@ -5,13 +5,16 @@ import { PrismaModule } from './database/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { EmployeesModule } from './modules/employees/employees.module';
+import { OrganizationModule } from './modules/organization/organization.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { DocumentWorkflowsModule } from './modules/document-workflows/document-workflows.module';
 import { RagModule } from './modules/rag/rag.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { GeneratedDocumentsModule } from './modules/generated-documents/generated-documents.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
+import { OffboardingModule } from './modules/offboarding/offboarding.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { DataImportsModule } from './modules/data-imports/data-imports.module';
 import { AlertsModule } from './modules/alerts/alerts.module';
 import { PredictionModule } from './modules/prediction/prediction.module';
 import { AuditModule } from './modules/audit/audit.module';
@@ -29,13 +32,16 @@ import { RedisModule } from './common/redis/redis.module';
     AuthModule,
     UsersModule,
     EmployeesModule,
+    OrganizationModule,
     DocumentsModule,
     DocumentWorkflowsModule,
     RagModule,
     ChatModule,
     GeneratedDocumentsModule,
     OnboardingModule,
+    OffboardingModule,
     DashboardModule,
+    DataImportsModule,
     AlertsModule,
     PredictionModule,
     AuditModule,

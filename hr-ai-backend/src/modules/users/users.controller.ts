@@ -7,6 +7,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
+import { UpdateConsentDto } from './dto/update-consent.dto';
 import { UsersService } from './users.service';
 
 @ApiTags('users')
@@ -20,6 +21,19 @@ export class UsersController {
   @Post()
   create(@Body() dto: CreateUserDto) {
     return this.usersService.create(dto);
+  }
+
+  @Get('consent')
+  getConsent(@CurrentUser() user: AuthenticatedUser) {
+    return this.usersService.getConsent(user.userId);
+  }
+
+  @Post('consent')
+  updateConsent(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: UpdateConsentDto,
+  ) {
+    return this.usersService.updateConsent(user.userId, dto.analyticsConsent);
   }
 
   @Roles(UserRole.ADMIN, UserRole.HR, UserRole.DIRECTION)

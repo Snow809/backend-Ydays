@@ -112,6 +112,7 @@ model User {
   auditLogs                AuditLog[]           @relation("UserAuditLogs")
   loginHistories           LoginHistory[]
   dataImports              DataImport[]         @relation("ImportedData")
+  consents                 UserConsent[]
 
   @@map("users")
 }
@@ -506,4 +507,15 @@ model LoginHistory {
 
   @@index([userId])
   @@index([loginAt])
+}
+
+model UserConsent {
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
+  analyticsConsent Boolean  @default(false) @map("analytics_consent")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+  @@map("user_consents")
 }

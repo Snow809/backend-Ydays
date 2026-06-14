@@ -233,6 +233,29 @@ export class DocumentWorkflowsService {
       throw new BadRequestException('Only pending requests can be approved');
     }
 
+    // Validate document coherence before generating (US-DOC-03)
+    const templateVariables = request.template.variables;
+    const values: Record<string, string> = {
+      employee_name: request.employee.fullName,
+      employee_position: request.employee.positionEntity?.title ?? request.employee.position ?? '',
+      department: request.employee.departmentEntity?.name ?? request.employee.department ?? '',
+      manager_name: request.employee.manager?.fullName ?? request.manager?.fullName ?? '',
+      date: new Date().toLocaleDateString('fr-FR'),
+    };
+
+    const missingVariables = [];
+    for (const variable of templateVariables) {
+      if (!values[variable] || values[variable].trim() === '') {
+        missingVariables.push(variable);
+      }
+    }
+
+    if (missingVariables.length > 0) {
+      throw new BadRequestException(
+        `Document coherence check failed. Critical missing data for: ${missingVariables.join(', ')}. Please update the employee file first.`,
+      );
+    }
+
     const generatedContent = await this.generateDocumentContent(request);
     const generatedFilePath = await this.storageService.saveGeneratedDocument(
       generatedContent,

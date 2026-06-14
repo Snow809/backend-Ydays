@@ -7,6 +7,8 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { AskQuestionDto } from './dto/ask-question.dto';
 import { ChatService } from './chat.service';
+import { ChatFeedbackDto } from './dto/chat-feedback.dto';
+import { EscalateConversationDto } from './dto/escalate-conversation.dto';
 
 @ApiTags('chat')
 @ApiBearerAuth()
@@ -31,5 +33,25 @@ export class ChatController {
   @Get('conversations/:id')
   findConversation(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.chatService.findConversation(id, user);
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.DIRECTION, UserRole.QVT, UserRole.COLLABORATOR)
+  @Post('messages/:id/feedback')
+  addFeedback(
+    @Param('id') id: string,
+    @Body() dto: ChatFeedbackDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.chatService.addFeedback(id, dto, user);
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.DIRECTION, UserRole.QVT, UserRole.COLLABORATOR)
+  @Post('conversations/:id/escalate')
+  escalateConversation(
+    @Param('id') id: string,
+    @Body() dto: EscalateConversationDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.chatService.escalateConversation(id, dto, user);
   }
 }
