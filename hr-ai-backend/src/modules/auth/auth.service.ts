@@ -9,6 +9,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RedisService } from '../../common/redis/redis.service';
 import { AppConfigService } from '../../config/config.service';
 import { LoginHistoryService } from './login-history.service';
+import { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 
 @Injectable()
 export class AuthService {
@@ -21,9 +22,18 @@ export class AuthService {
   ) {}
 
   async login(dto: LoginDto, ip?: string, userAgent?: string) {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+      include: {
+        roles: {
+          include: {
+            role: true
+          }
+        }
+      }
+    });
 
-    if (!user || !user.isActive) {
+    if (!user || user.accountStatus !== 'ACTIVE') {
       // Record failed login attempt
       await this.loginHistoryService.recordFailedLogin(dto.email, ip, userAgent);
       throw new UnauthorizedException('Invalid credentials');
@@ -42,7 +52,8 @@ export class AuthService {
     const payload = {
       sub: user.id,
       email: user.email,
-      role: user.role,
+      role: user.roles?.[0]?.role?.name || 'COLLABORATOR',
+      fullName: user.fullName || user.email.split('@')[0],
     };
 
     const accessToken = await this.jwtService.signAsync(payload);
@@ -206,5 +217,44 @@ export class AuthService {
       default:
         return value;
     }
+  }
+  async getMeWithDetails(user: AuthenticatedUser) {
+    let employee = await this.prisma.employee.findUnique({
+      where: { email: user.email },
+      include: {
+        requests: {
+          where: { kind: 'VACATION' },
+          orderBy: { createdAt: 'desc' }
+        },
+        department: true,
+        position: true,
+      },
+    });
+
+    if (!employee) {
+      employee = await this.prisma.employee.create({
+        data: {
+          employeeNumber: 'EMP-' + user.userId.substring(0, 5).toUpperCase(),
+          firstName: user.fullName ? user.fullName.split(' ')[0] : user.email.split('@')[0],
+          lastName: user.fullName && user.fullName.split(' ').length > 1 ? user.fullName.split(' ').slice(1).join(' ') : 'Utilisateur',
+          email: user.email,
+          salary: 0,
+          hireDate: new Date(),
+          userId: user.userId,
+          vacationBalanceDays: 25,
+          rttBalanceDays: 10,
+        },
+        include: {
+          requests: true,
+          department: true,
+          position: true,
+        },
+      });
+    }
+
+    return {
+      ...user,
+      employee,
+    };
   }
 }

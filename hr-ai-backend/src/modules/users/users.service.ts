@@ -13,57 +13,151 @@ export class UsersService {
     private readonly auditService: AuditService,
   ) {}
 
+  private mapUser(user: any) {
+    if (!user) return null;
+    return {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.roles?.[0]?.role?.name || 'COLLABORATOR',
+      isActive: user.accountStatus === 'ACTIVE',
+      createdAt: user.createdAt,
+      updatedAt: user.createdAt,
+      employee: user.employee, // Included for edit modal
+    };
+  }
+
   async create(dto: CreateUserDto) {
     const passwordHash = await bcrypt.hash(dto.password, 10);
+    const role = await this.prisma.role.findUnique({
+      where: { name: 'COLLABORATOR' },
+    });
+    
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         passwordHash,
-        role: 'COLLABORATOR',
+        fullName: dto.fullName || dto.email.split('@')[0],
+        roles: role ? {
+          create: {
+            roleId: role.id,
+          },
+        } : undefined,
       },
-      select: this.safeUserSelect(),
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+        employee: true,
+      },
     });
 
-    return user;
+    return this.mapUser(user);
   }
 
-  findAll() {
-    return this.prisma.user.findMany({ select: this.safeUserSelect() });
+  async findAll() {
+    const users = await this.prisma.user.findMany({
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+        employee: true,
+      },
+    });
+    return users.map(user => this.mapUser(user));
   }
 
-  findOne(id: string) {
-    return this.prisma.user.findUnique({
+  async findOne(id: string) {
+    const user = await this.prisma.user.findUnique({
       where: { id },
-      select: this.safeUserSelect(),
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+      },
     });
+    return this.mapUser(user);
   }
 
   async updateRole(id: string, dto: UpdateUserRoleDto, actor?: AuthenticatedUser) {
+    const role = await this.prisma.role.findUnique({
+      where: { name: dto.role },
+    });
+    if (!role) {
+      throw new Error(`Role ${dto.role} not found`);
+    }
+
+    await this.prisma.userRole.deleteMany({
+      where: { userId: id },
+    });
+
     const user = await this.prisma.user.update({
       where: { id },
-      data: { role: dto.role },
-      select: this.safeUserSelect(),
+      data: {
+        roles: {
+          create: {
+            roleId: role.id,
+          },
+        },
+      },
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+      },
     });
     await this.auditService.logRoleChange(actor?.userId, id, { role: dto.role });
-    return user;
+    return this.mapUser(user);
   }
 
-  deactivate(id: string) {
-    return this.prisma.user.update({
+  async deactivate(id: string) {
+    const user = await this.prisma.user.update({
       where: { id },
-      data: { isActive: false },
-      select: this.safeUserSelect(),
+      data: { accountStatus: 'SUSPENDED' },
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+      },
     });
+    return this.mapUser(user);
   }
 
-  private safeUserSelect() {
-    return {
-      id: true,
-      email: true,
-      role: true,
-      isActive: true,
-      createdAt: true,
-      updatedAt: true,
-    };
+  async activate(id: string) {
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: { accountStatus: 'ACTIVE' },
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+      },
+    });
+    return this.mapUser(user);
+  }
+
+  async remove(id: string) {
+    try {
+      await this.prisma.userRole.deleteMany({ where: { userId: id } });
+      await this.prisma.employee.deleteMany({ where: { userId: id } });
+      await this.prisma.user.delete({ where: { id } });
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      await this.deactivate(id);
+      return { success: false, message: 'Utilisateur désactivé (données liées existantes).' };
+    }
   }
 }

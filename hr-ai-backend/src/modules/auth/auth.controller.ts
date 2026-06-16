@@ -49,8 +49,10 @@ export class AuthController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  me(@CurrentUser() user: AuthenticatedUser) {
-    return user;
+  async me(@CurrentUser() user: AuthenticatedUser) {
+    // Injecting PrismaService directly or using AuthService is needed
+    // Let's use authService to keep it clean. I will need to add a method in AuthService.
+    return this.authService.getMeWithDetails(user);
   }
 
   // ── Forgot password (public – no auth required) ──────────────────────

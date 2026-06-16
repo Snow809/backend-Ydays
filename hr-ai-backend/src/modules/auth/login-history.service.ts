@@ -6,41 +6,78 @@ export class LoginHistoryService {
   constructor(private prisma: PrismaService) {}
 
   async recordLogin(userId: string, email: string, ipAddress?: string, userAgent?: string) {
-    return this.prisma.loginHistory.create({
+    return this.prisma.auditLog.create({
       data: {
         userId,
-        email,
-        ipAddress,
-        userAgent,
+        action: 'LOGIN_SUCCESS',
+        resourceType: 'User',
+        resourceId: userId,
         status: 'SUCCESS',
       },
     });
   }
 
   async recordFailedLogin(email: string, ipAddress?: string, userAgent?: string) {
-    return this.prisma.loginHistory.create({
+    return this.prisma.auditLog.create({
       data: {
-        email,
-        ipAddress,
-        userAgent,
+        action: 'LOGIN_FAILURE',
+        resourceType: 'User',
         status: 'FAILED',
       },
     });
   }
 
   async getUserLoginHistory(userId: string, limit: number = 50) {
-    return this.prisma.loginHistory.findMany({
-      where: { userId },
-      orderBy: { loginAt: 'desc' },
+    const logs = await this.prisma.auditLog.findMany({
+      where: { userId, action: 'LOGIN_SUCCESS' },
+      orderBy: { createdAt: 'desc' },
       take: limit,
     });
+
+    return logs.map(log => ({
+      id: log.id,
+      userId: log.userId,
+      email: '',
+      ipAddress: '',
+      userAgent: '',
+      status: log.status,
+      loginAt: log.createdAt,
+    }));
   }
 
   async getAllLoginHistory(limit: number = 100) {
-    return this.prisma.loginHistory.findMany({
-      orderBy: { loginAt: 'desc' },
+    const logs = await this.prisma.auditLog.findMany({
+      where: {
+        action: { in: ['LOGIN_SUCCESS', 'LOGIN_FAILURE'] }
+      },
+      orderBy: { createdAt: 'desc' },
       take: limit,
-      include: { user: { select: { email: true, role: true } } },
+      include: {
+        user: {
+          select: {
+            email: true,
+            roles: {
+              include: {
+                role: true
+              }
+            }
+          }
+        }
+      },
     });
+
+    return logs.map(log => ({
+      id: log.id,
+      userId: log.userId,
+      email: log.user?.email || '',
+      ipAddress: '',
+      userAgent: '',
+      status: log.status,
+      loginAt: log.createdAt,
+      user: log.user ? {
+        email: log.user.email,
+        role: log.user.roles?.[0]?.role?.name || 'COLLABORATOR'
+      } : null
+    }));
   }
 }
