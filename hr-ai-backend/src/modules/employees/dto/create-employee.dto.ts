@@ -38,4 +38,8 @@ export class CreateEmployeeDto {
   @IsOptional()
   @IsDateString()
   hiredAt?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  salary?: number;
 }

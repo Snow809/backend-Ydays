@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../common/enums/user-role.enum';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -16,7 +17,7 @@ import { EmployeesService } from './employees.service';
 export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
 
-  @Roles(UserRole.ADMIN, UserRole.HR)
+  @Roles(UserRole.ADMIN)
   @Post()
   create(@Body() dto: CreateEmployeeDto) {
     return this.employeesService.create(dto);
@@ -44,5 +45,41 @@ export class EmployeesController {
   @Post('import')
   importEmployees(@Body() dto: ImportEmployeesDto) {
     return this.employeesService.importEmployees(dto);
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.DIRECTION, UserRole.QVT, UserRole.COLLABORATOR)
+  @Get('me/vacations')
+  getMyVacations(@CurrentUser() user: AuthenticatedUser) {
+    return this.employeesService.getMyVacationRequests(user.email);
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.DIRECTION, UserRole.QVT, UserRole.COLLABORATOR)
+  @Post('me/vacations')
+  createVacation(@CurrentUser() user: AuthenticatedUser, @Body() dto: any) {
+    return this.employeesService.createVacationRequest(user.email, dto);
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER)
+  @Patch('requests/:id/status')
+  updateRequestStatus(@Param('id') id: string, @Body() dto: { status: 'APPROVED' | 'REJECTED' }, @CurrentUser() user: AuthenticatedUser) {
+    return this.employeesService.updateRequestStatus(id, dto.status, user.userId);
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER)
+  @Post('absences')
+  createAbsence(@Body() dto: any) {
+    return this.employeesService.createAbsence(dto);
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.HR)
+  @Get('meta/departments')
+  getDepartments() {
+    return this.employeesService.getDepartments();
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.HR)
+  @Get('meta/positions')
+  getPositions() {
+    return this.employeesService.getPositions();
   }
 }
