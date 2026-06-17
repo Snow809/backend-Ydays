@@ -8,12 +8,13 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/hr_ai?schema=public
       REDIS_HOST: redis
+      MINIO_ENDPOINT: minio
     depends_on:
       - postgres
       - redis
+      - minio
     volumes:
       - ./uploads:/app/uploads
-    # Future storage adapter can replace this volume with MinIO/S3 configuration.
 
   postgres:
     image: postgres:16-alpine
@@ -31,5 +32,18 @@ services:
     ports:
       - "6379:6379"
 
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+
 volumes:
   postgres-data:
+  minio-data:
