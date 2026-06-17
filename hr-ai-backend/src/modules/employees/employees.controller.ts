@@ -8,6 +8,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { ImportEmployeesDto } from './dto/import-employees.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { CreateDocumentRequestDto } from './dto/create-document-request.dto';
 import { EmployeesService } from './employees.service';
 
 @ApiTags('employees')
@@ -59,10 +60,28 @@ export class EmployeesController {
     return this.employeesService.createVacationRequest(user.email, dto);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.DIRECTION, UserRole.QVT, UserRole.COLLABORATOR)
+  @Get('me/documents/requests')
+  getMyDocumentRequests(@CurrentUser() user: AuthenticatedUser) {
+    return this.employeesService.getMyDocumentRequests(user.userId);
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.DIRECTION, UserRole.QVT, UserRole.COLLABORATOR)
+  @Get('me/documents')
+  getMyDocuments(@CurrentUser() user: AuthenticatedUser) {
+    return this.employeesService.getMyDocuments(user.userId);
+  }
+
+  @Roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.DIRECTION, UserRole.QVT, UserRole.COLLABORATOR)
+  @Post('me/documents/requests')
+  createDocumentRequest(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateDocumentRequestDto) {
+    return this.employeesService.createDocumentRequest(user.userId, dto);
+  }
+
   @Roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER)
   @Patch('requests/:id/status')
-  updateRequestStatus(@Param('id') id: string, @Body() dto: { status: 'APPROVED' | 'REJECTED' }, @CurrentUser() user: AuthenticatedUser) {
-    return this.employeesService.updateRequestStatus(id, dto.status, user.userId);
+  updateRequestStatus(@Param('id') id: string, @Body() dto: { status: 'APPROVED' | 'REJECTED'; comment?: string }, @CurrentUser() user: AuthenticatedUser) {
+    return this.employeesService.updateRequestStatus(id, dto.status, user.userId, dto.comment);
   }
 
   @Roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER)

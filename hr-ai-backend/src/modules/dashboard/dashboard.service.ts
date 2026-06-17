@@ -370,7 +370,7 @@ export class DashboardService {
     const requests = await this.prisma.hrRequest.findMany({
       take: 10,
       orderBy: { createdAt: 'desc' },
-      where: { ...requestScope, kind: 'VACATION' },
+      where: { ...requestScope },
       include: { employee: true },
     });
     return requests.map((r: any) => ({
