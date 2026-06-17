@@ -8,6 +8,7 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  NotFoundException
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
@@ -19,13 +20,19 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { ValidateDocumentDto } from './dto/validate-document.dto';
 import { DocumentsService } from './documents.service';
+import { S3Service } from './s3.service';
+import { PrismaService } from '../../database/prisma.service';
 
 @ApiTags('documents')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('documents')
 export class DocumentsController {
-  constructor(private readonly documentsService: DocumentsService) {}
+  constructor(
+    private readonly documentsService: DocumentsService,
+    private readonly s3Service: S3Service,
+    private readonly prisma: PrismaService,
+  ) {}
 
   @Roles(UserRole.HR, UserRole.ADMIN)
   @ApiConsumes('multipart/form-data')
@@ -65,5 +72,23 @@ export class DocumentsController {
   @Patch(':id/archive')
   archive(@Param('id') id: string) {
     return this.documentsService.archive(id);
+  }
+
+  @Get('download/:id')
+  async downloadDocument(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    const doc = await this.prisma.generatedDocument.findUnique({
+      where: { id }
+    });
+
+    if (!doc) {
+      throw new NotFoundException('Document non trouvé');
+    }
+
+    if (doc.employeeId !== user.userId && user.role !== 'HR' && user.role !== 'ADMIN') {
+      throw new NotFoundException('Document non trouvé ou accès refusé');
+    }
+
+    const url = await this.s3Service.getPresignedUrl(doc.filePath, 300);
+    return { url };
   }
 }

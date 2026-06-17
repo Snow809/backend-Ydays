@@ -20,31 +20,32 @@ export class DocumentsService {
     }
 
     const filePath = await this.storageService.saveUploadedFile(file);
-    return this.prisma.hRDocument.create({
+    return this.prisma.hrDocument.create({
       data: {
         title: dto.title,
-        category: dto.category,
-        version: dto.version ?? '1.0',
+        category: dto.category || 'General',
+        documentType: dto.category || 'HR Document',
         filePath,
-        uploadedByUserId: user.userId,
+        uploadedBy: user.userId,
+        sizeBytes: file.size,
+        fileType: file.originalname.split('.').pop()?.toUpperCase() || 'PDF',
       },
     });
   }
 
   findAll() {
-    return this.prisma.hRDocument.findMany();
+    return this.prisma.hrDocument.findMany();
   }
 
   findOne(id: string) {
-    return this.prisma.hRDocument.findUnique({ where: { id } });
+    return this.prisma.hrDocument.findUnique({ where: { id } });
   }
 
   async validate(id: string, dto: ValidateDocumentDto, user: AuthenticatedUser) {
-    const document = await this.prisma.hRDocument.update({
+    const document = await this.prisma.hrDocument.update({
       where: { id },
       data: {
-        status: 'VALIDATED',
-        validatedByUserId: user.userId,
+        status: 'APPROVED',
       },
     });
     await this.auditService.logDocumentValidation(user.userId, id, { comment: dto.comment });
@@ -52,7 +53,7 @@ export class DocumentsService {
   }
 
   archive(id: string) {
-    return this.prisma.hRDocument.update({
+    return this.prisma.hrDocument.update({
       where: { id },
       data: { status: 'ARCHIVED' },
     });
