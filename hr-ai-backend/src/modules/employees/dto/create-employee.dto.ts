@@ -42,4 +42,9 @@ export class CreateEmployeeDto {
   @ApiProperty({ required: false })
   @IsOptional()
   salary?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  userId?: string;
 }

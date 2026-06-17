@@ -1,12 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { ImportEmployeesDto } from './dto/import-employees.dto';
+import { GenerationService } from '../documents/generation.service';
 
 @Injectable()
 export class EmployeesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly generationService: GenerationService,
+  ) {}
 
   async create(dto: CreateEmployeeDto) {
     const nameParts = dto.fullName ? dto.fullName.trim().split(/\s+/) : ['Utilisateur'];
@@ -25,6 +29,7 @@ export class EmployeesService {
 
     return this.prisma.employee.create({
       data: {
+        userId: dto.userId || undefined,
         employeeNumber: dto.matricule,
         email: dto.email,
         firstName,
@@ -110,13 +115,83 @@ export class EmployeesService {
     });
   }
 
-  async updateRequestStatus(id: string, status: 'APPROVED' | 'REJECTED', reviewerId: string) {
+  async createDocumentRequest(userId: string, dto: { templateId: string; note?: string }) {
+    const employee = await this.prisma.employee.findUnique({ where: { userId } });
+    if (!employee) throw new NotFoundException('Employee not found');
+
+    const template = await this.prisma.documentTemplate.findUnique({ where: { id: dto.templateId } });
+    if (!template || !template.isActive) {
+      throw new NotFoundException('Template introuvable ou inactif');
+    }
+
+    return this.prisma.hrRequest.create({
+      data: {
+        employeeId: employee.id,
+        templateId: template.id,
+        kind: 'DOCUMENT',
+        requestType: template.title,
+        detail: `Demande de document: ${template.title}`,
+        status: 'PENDING',
+        priority: 'NORMAL',
+        note: dto.note,
+      }
+    });
+  }
+
+  async getMyDocumentRequests(userId: string) {
+    const employee = await this.prisma.employee.findUnique({ where: { userId } });
+    if (!employee) return [];
+    
+    // Get HR requests of kind DOCUMENT
+    const requests = await this.prisma.hrRequest.findMany({
+      where: { employeeId: employee.id, kind: 'DOCUMENT' },
+      orderBy: { createdAt: 'desc' },
+      include: { template: true }
+    });
+
+    // Also get the generated documents directly
+    const generated = await this.prisma.generatedDocument.findMany({
+      where: { employeeId: employee.id },
+      orderBy: { generatedAt: 'desc' }
+    });
+
+    return { requests, generated };
+  }
+
+  async getMyDocuments(userId: string) {
+    const employee = await this.prisma.employee.findUnique({ where: { userId } });
+    if (!employee) return [];
+
+    const hrDocs = await this.prisma.hrDocument.findMany({
+      where: { 
+        OR: [
+          { employeeId: employee.id },
+          { isPublic: true }
+        ]
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const generated = await this.prisma.generatedDocument.findMany({
+      where: { employeeId: employee.id, status: 'APPROVED' },
+      orderBy: { generatedAt: 'desc' }
+    });
+
+    return { hrDocs, generated };
+  }
+
+  async updateRequestStatus(id: string, status: 'APPROVED' | 'REJECTED', reviewerId: string, comment?: string) {
+    if (status === 'REJECTED' && !comment) {
+      throw new Error('Un motif est obligatoire pour refuser une demande.');
+    }
+
     const req = await this.prisma.hrRequest.update({
       where: { id },
       data: {
         status,
         reviewedBy: reviewerId,
-        reviewedAt: new Date()
+        reviewedAt: new Date(),
+        comment: comment || null,
       }
     });
 
@@ -147,6 +222,11 @@ export class EmployeesService {
            }
          });
       }
+    } else if (status === 'APPROVED' && req.kind === 'DOCUMENT') {
+      // Trigger generation async without awaiting to not block response
+      this.generationService.generateDocument(req.id).catch(e => {
+        console.error(`Failed to generate document for request ${req.id}`, e);
+      });
     }
 
     return req;
