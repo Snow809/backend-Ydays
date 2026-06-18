@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Patch, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../common/enums/user-role.enum';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -41,8 +42,13 @@ export class EmployeesController {
   }
 
   @Roles(UserRole.ADMIN, UserRole.HR)
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
   @Post('import')
-  importEmployees(@Body() dto: ImportEmployeesDto) {
-    return this.employeesService.importEmployees(dto);
+  importEmployees(
+    @Body() dto: ImportEmployeesDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.employeesService.importEmployees(dto, file);
   }
 }
