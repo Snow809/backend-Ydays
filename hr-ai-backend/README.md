@@ -93,6 +93,16 @@ All application routes use the `/api` prefix, except `GET /health`.
 - `GET /api/employees/:id`
 - `PATCH /api/employees/:id`
 - `POST /api/employees/import`
+- `POST /api/organization/departments`
+- `GET /api/organization/departments`
+- `GET /api/organization/departments/:id`
+- `PATCH /api/organization/departments/:id`
+- `DELETE /api/organization/departments/:id`
+- `POST /api/organization/job-positions`
+- `GET /api/organization/job-positions`
+- `GET /api/organization/job-positions/:id`
+- `PATCH /api/organization/job-positions/:id`
+- `DELETE /api/organization/job-positions/:id`
 - `POST /api/documents/upload`
 - `GET /api/documents`
 - `GET /api/documents/:id`
@@ -117,6 +127,8 @@ All application routes use the `/api` prefix, except `GET /health`.
 - `POST /api/chat/ask`
 - `GET /api/chat/conversations`
 - `GET /api/chat/conversations/:id`
+- `POST /api/chat/messages/:id/feedback`
+- `POST /api/chat/conversations/:id/escalate`
 - `POST /api/generated-documents/request`
 - `POST /api/generated-documents/:id/generate-draft`
 - `PATCH /api/generated-documents/:id/validate`
@@ -128,12 +140,21 @@ All application routes use the `/api` prefix, except `GET /health`.
 - `GET /api/onboarding/:id`
 - `PATCH /api/onboarding/steps/:id/complete`
 - `GET /api/onboarding/:id/progress`
+- `GET /api/onboarding/:id/recommendations`
+- `POST /api/onboarding/delay-alerts`
 - `GET /api/dashboard/headcount`
 - `GET /api/dashboard/absenteeism`
 - `GET /api/dashboard/turnover`
 - `GET /api/dashboard/onboarding-progress`
 - `GET /api/dashboard/ai-usage`
 - `GET /api/dashboard/alerts-summary`
+- `GET /api/dashboard/report`
+- `POST /api/data-imports/absences`
+- `POST /api/data-imports/absences/upload`
+- `POST /api/data-imports/kpi-snapshots`
+- `GET /api/data-imports`
+- `GET /api/data-imports/:id`
+- `GET /api/data-imports/:id/quality-report`
 - `POST /api/alerts`
 - `GET /api/alerts`
 - `GET /api/alerts/:id`
@@ -145,3 +166,16 @@ All application routes use the `/api` prefix, except `GET /health`.
 ## Modular Monolith
 
 The application is one NestJS app with feature modules. It is intentionally not split into microservices. Cross-cutting services such as Prisma, storage, LLM, embeddings, document parsing, auditing, and workers are internal modules that can evolve without changing the deployment model.
+
+## Implemented Backend User Stories (MVP & V1)
+
+We have successfully implemented the core backend engineering logic for the following user stories:
+
+- **Employee CSV Import (US-DATA-01)**: Exposes `POST /api/employees/import` accepting a CSV file. Parses records, performs email and matricule duplicate validation, creates missing departments/positions automatically, registers the user credentials, and links managers.
+- **Dynamic Onboarding Plans (US-ONB-01)**: Activates a customized 30-day onboarding plan based on the employee's department (e.g. IT, HR, Sales/Marketing, Product/Design). Supports bulk activation of multiple employee IDs and computes progress status (`Non activé`, `En cours`, `Terminé`) with role-based visibility restrictions (RH, N+1 Manager, Collaborator).
+- **Document Coherence Check (US-DOC-03)**: Automatically verifies that all profile fields mapped in a document template exist on the employee record before allowing managers/HR to approve the document request, preventing document generations with empty variables.
+- **GDPR User Consent (US-COMP-05)**: Exposes `GET /api/users/consent` and `POST /api/users/consent` to store and update employee choices regarding analytical data processing, complete with a dedicated Prisma schema table (`UserConsent`) and database migration.
+- **Offboarding Workflows (US-OFF-01 / US-OFF-03)**: Exposes `POST /api/offboarding/initiate` to initiate exit procedures, setting the `leftAt` date and automatically generating checklist tasks (equipment return, access revocation, exit interview, document signature) with strict role-based access control.
+- **Predictive Analytics (US-PRED-01 / US-PRED-02)**: Dynamically computes employee turnover risk levels, monthly absenteeism trends by department, and 12-month workforce size projections based on live database records.
+- **AI RAG Document Indexing (US-KB-04)**: Integrates document parsing, text chunking (with overlap), database storage, and context-retrieval query routing, supported asynchronously by a BullMQ/Redis background worker.
+- **Advanced AI Safety & Supervision (US-SUP-03 / US-SUP-04)**: Detects prompt injections, blocks sensitive queries, and automatically suspends chatbot access temporarily for any user triggering 3 or more security violations in 24 hours.

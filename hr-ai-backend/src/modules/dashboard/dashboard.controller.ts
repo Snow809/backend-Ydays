@@ -48,4 +48,10 @@ export class DashboardController {
   alertsSummary() {
     return this.dashboardService.alertsSummary();
   }
+
+  @Roles(UserRole.ADMIN, UserRole.HR, UserRole.DIRECTION)
+  @Get('report')
+  report() {
+    return this.dashboardService.report();
+  }
 }
