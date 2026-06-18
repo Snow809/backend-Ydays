@@ -5,6 +5,7 @@ import { PrismaModule } from './database/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { EmployeesModule } from './modules/employees/employees.module';
+import { OrganizationModule } from './modules/organization/organization.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { DocumentWorkflowsModule } from './modules/document-workflows/document-workflows.module';
 import { RagModule } from './modules/rag/rag.module';
@@ -29,6 +30,7 @@ import { RedisModule } from './common/redis/redis.module';
     AuthModule,
     UsersModule,
     EmployeesModule,
+    OrganizationModule,
     DocumentsModule,
     DocumentWorkflowsModule,
     RagModule,
