@@ -12,6 +12,7 @@ import { RagModule } from './modules/rag/rag.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { GeneratedDocumentsModule } from './modules/generated-documents/generated-documents.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
+import { OffboardingModule } from './modules/offboarding/offboarding.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { DataImportsModule } from './modules/data-imports/data-imports.module';
 import { AlertsModule } from './modules/alerts/alerts.module';
@@ -38,6 +39,7 @@ import { RedisModule } from './common/redis/redis.module';
     ChatModule,
     GeneratedDocumentsModule,
     OnboardingModule,
+    OffboardingModule,
     DataImportsModule,
     DashboardModule,
     AlertsModule,
