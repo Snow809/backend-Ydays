@@ -13,6 +13,7 @@ import { GeneratedDocumentsModule } from './modules/generated-documents/generate
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { AlertsModule } from './modules/alerts/alerts.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PredictionModule } from './modules/prediction/prediction.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { StorageModule } from './services/storage/storage.module';
@@ -37,6 +38,7 @@ import { RedisModule } from './common/redis/redis.module';
     OnboardingModule,
     DashboardModule,
     AlertsModule,
+    NotificationsModule,
     PredictionModule,
     AuditModule,
     StorageModule,

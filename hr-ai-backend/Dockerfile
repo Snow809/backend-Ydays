@@ -18,4 +18,4 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
 COPY package*.json ./
 EXPOSE 3000
-CMD ["node", "dist/main"]
+CMD ["sh", "-c", "npm run prisma:migrate deploy --skip-generate && node dist/main"]
